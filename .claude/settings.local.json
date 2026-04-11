@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/andre/Desktop/projekte/**)",
+      "Bash(npm create:*)"
+    ]
+  }
+}

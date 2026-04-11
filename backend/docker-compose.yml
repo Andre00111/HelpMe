@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: helpme_postgres
+    environment:
+      POSTGRES_DB: helpme_db
+      POSTGRES_USER: helpme_user
+      POSTGRES_PASSWORD: helpme_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U helpme_user -d helpme_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - helpme_network
+
+volumes:
+  postgres_data:
+
+networks:
+  helpme_network:
+    driver: bridge
