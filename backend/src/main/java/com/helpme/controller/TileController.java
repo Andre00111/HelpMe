@@ -15,7 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/tiles")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"})
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000", "http://localhost:3001"})
 @Slf4j
 public class TileController {
 

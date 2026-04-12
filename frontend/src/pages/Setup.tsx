@@ -6,7 +6,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import SetupTileSelector from '../components/SetupTileSelector'
 import { TileCategory } from '../hooks/useCustomTiles'
-import { getTilesForCategory, SetupTile } from '../data/setupTiles'
+import { getTilesForCategory } from '../data/setupTiles'
 import { useCustomTiles } from '../hooks/useCustomTiles'
 
 const CATEGORIES: TileCategory[] = ['zuhause', 'draussen', 'arzt', 'essen', 'notfall']

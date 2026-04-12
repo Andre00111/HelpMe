@@ -198,11 +198,13 @@ export default function AddTileDialog({ open, onClose, onAdd }: AddTileDialogPro
                   border: color === c ? '5px solid #000' : '3px solid #ccc',
                   transition: 'all 0.15s',
                   opacity: isSubmitting ? 0.5 : 1,
-                  '&:hover': !isSubmitting && {
-                    transform: 'scale(1.08)',
-                    boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
-                    borderColor: '#000',
-                  },
+                  ...(isSubmitting ? {} : {
+                    '&:hover': {
+                      transform: 'scale(1.08)',
+                      boxShadow: '0 6px 16px rgba(0,0,0,0.25)',
+                      borderColor: '#000',
+                    },
+                  }),
                   '&:focus-visible': {
                     outline: '3px solid #FFD700',
                     outlineOffset: '2px',

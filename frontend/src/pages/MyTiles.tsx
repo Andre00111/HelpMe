@@ -20,18 +20,6 @@ const CATEGORY_LABELS: Record<TileCategory, string> = {
   NOTFALL: '🚨 Notfall',
 }
 
-// Map old format to new format
-function mapCategoryFormat(oldFormat: string): TileCategory {
-  const mapping: Record<string, TileCategory> = {
-    zuhause: 'ZUHAUSE',
-    draussen: 'DRAUSSEN',
-    arzt: 'ARZT',
-    essen: 'ESSEN',
-    notfall: 'NOTFALL',
-  }
-  return mapping[oldFormat.toLowerCase()] || 'ZUHAUSE'
-}
-
 export default function MyTiles() {
   const navigate = useNavigate()
   const isLoggedIn = authService.isAuthenticated()
@@ -326,7 +314,7 @@ export default function MyTiles() {
         <Grid container spacing={{ xs: 2, sm: 2.5, md: 3, lg: 3.5 }} sx={{ mb: 5 }}>
           {tilesInCategory.map((tile) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={tile.id}>
-              <CustomTileCard tile={tile} onDelete={deleteTile} />
+              <CustomTileCard tile={tile as any} onDelete={deleteTile as any} />
             </Grid>
           ))}
         </Grid>
@@ -509,9 +497,12 @@ export default function MyTiles() {
             open={dialogOpen}
             onClose={() => setDialogOpen(false)}
             onAdd={(tile) => {
-              addTile(tile)
-              const mapped = tile.category as TileCategory
-              setActiveCategory(mapped)
+              const tileWithUppercaseCategory = {
+                ...tile,
+                category: tile.category.toUpperCase() as TileDTO['category']
+              }
+              addTile(tileWithUppercaseCategory)
+              setActiveCategory(tile.category as TileCategory)
             }}
           />
         </>

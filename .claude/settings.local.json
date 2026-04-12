@@ -2,7 +2,40 @@
   "permissions": {
     "allow": [
       "Read(//Users/andre/Desktop/projekte/**)",
-      "Bash(npm create:*)"
+      "Bash(npm create:*)",
+      "WebFetch(domain:de.fiverr.com)",
+      "Bash(mvn clean:*)",
+      "Bash(pkill -f \"mvn spring-boot:run\")",
+      "Bash(pkill -f \"java.*helpme-backend\")",
+      "Bash(curl -v http://localhost:8080/api/location/people)",
+      "Bash(kill 56099)",
+      "Bash(awk '{print $2}')",
+      "Bash(xargs kill:*)",
+      "Bash(curl -s -o /dev/null -w \"HTTP Status: %{http_code}\\\\n\" http://localhost:8080/api/location/people)",
+      "Bash(curl -s -w \"\\\\nHTTP Status: %{http_code}\\\\n\" http://localhost:8080/api/location/people)",
+      "Bash(pkill -f java)",
+      "Bash(psql -h localhost -U helpme_user -d helpme_db -c \"SELECT id, user_id, latitude, longitude, accuracy, created_at FROM locations ORDER BY created_at DESC LIMIT 5;\")",
+      "Bash(curl -s http://localhost:8080/api/location/people)",
+      "Bash(python3 -m json.tool)",
+      "Bash(nohup java:*)",
+      "Bash(curl -s -o /dev/null -w \"Backend Status: HTTP %{http_code}\\\\n\" http://localhost:8081/api/location/people)",
+      "Bash(kill -9 60272)",
+      "Bash(rm -rf /Users/andre/Desktop/projekte/HelpMe/frontend)",
+      "Bash(mkdir /Users/andre/Desktop/projekte/HelpMe/frontend)",
+      "Bash(mv package.json package-lock.json vite.config.ts index.html tsconfig.json tsconfig.node.json src/ frontend/)",
+      "Bash(mkdir -p /Users/andre/Desktop/projekte/HelpMeCockpit/frontend)",
+      "Bash(mkdir -p /Users/andre/Desktop/projekte/HelpMeCockpit/backend)",
+      "Bash(mv package.json package-lock.json vite.config.ts index.html tsconfig.json tsconfig.app.json tsconfig.node.json eslint.config.js src/ public/ frontend/)",
+      "Bash(chmod +x /Users/andre/Desktop/projekte/HelpMe/start.sh)",
+      "Bash(chmod +x /Users/andre/Desktop/projekte/HelpMeCockpit/start.sh)",
+      "Bash(./start.sh)",
+      "Bash(bash ./start.sh)",
+      "Bash(npm run:*)",
+      "Bash(docker compose:*)",
+      "Bash(bash start.sh)",
+      "Bash(curl -s http://localhost:8081/api/auth/health)",
+      "Bash(curl -s -I http://localhost:3000)",
+      "Bash(curl -s -I http://localhost:3001)"
     ]
   }
 }

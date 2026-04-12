@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: helpme_postgres
+    environment:
+      POSTGRES_DB: helpme_db
+      POSTGRES_USER: helpme_user
+      POSTGRES_PASSWORD: helpme_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U helpme_user -d helpme_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - helpme_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: helpme_backend
+    ports:
+      - "8081:8081"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: helpme_user
+      DB_PASSWORD: helpme_password
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/helpme_db
+      SPRING_DATASOURCE_USERNAME: helpme_user
+      SPRING_DATASOURCE_PASSWORD: helpme_password
+      SERVER_PORT: 8081
+      JWT_SECRET: your-super-secret-key-change-this-in-production-at-least-32-characters-long!!
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001,http://localhost:5173
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - helpme_network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8081/api
+    container_name: helpme_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - helpme_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  helpme_network:
+    driver: bridge

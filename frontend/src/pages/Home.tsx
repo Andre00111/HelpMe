@@ -5,6 +5,7 @@ import EmergencyTile from '../components/EmergencyTile'
 import { DEFAULT_TILES } from '../data/tiles'
 import authService from '../services/authService'
 import tileService, { TileDTO } from '../services/tileService'
+import locationService from '../services/locationService'
 
 export default function Home() {
   const isLoggedIn = authService.isAuthenticated()
@@ -13,6 +14,7 @@ export default function Home() {
   const [tiles, setTiles] = useState<TileDTO[]>([])
   const [tilesLoading, setTilesLoading] = useState(false)
   const [tilesError, setTilesError] = useState<string | null>(null)
+  const [currentLocation, setCurrentLocation] = useState<any>(null)
 
   // Prüfe ob Web Speech API verfügbar ist
   useEffect(() => {
@@ -43,6 +45,31 @@ export default function Home() {
     } else {
       // Show default tiles if not logged in
       setTiles([])
+    }
+  }, [isLoggedIn])
+
+  // Start location tracking when logged in (store current location, don't send it)
+  useEffect(() => {
+    if (isLoggedIn) {
+      console.log('Starting location tracking')
+      locationService.startTracking(
+        (location) => {
+          console.log('Location tracked:', location)
+          setCurrentLocation(location)
+        },
+        (error) => {
+          console.error('Location error:', error)
+        }
+      )
+    } else {
+      locationService.stopTracking()
+    }
+
+    // Cleanup: stop tracking when component unmounts or user logs out
+    return () => {
+      if (!isLoggedIn) {
+        locationService.stopTracking()
+      }
     }
   }, [isLoggedIn])
 
@@ -197,12 +224,162 @@ export default function Home() {
           <Grid item xs={12} sm={6} md={4}>
             <EmergencyTile
               type="location"
-              onActivate={() => {
-                alert('📍 Standort wird übermittelt...\n\n(Das ist noch ein Demo-Button)')
+              onActivate={async () => {
+                try {
+                  if (!currentLocation) {
+                    alert('❌ Standort wird noch erfasst, bitte warten...')
+                    return
+                  }
+                  const location = { ...currentLocation, healthStatus: 'GOOD' as const }
+                  await locationService.sendLocationToBackend(location)
+                  alert('✅ Standort übermittelt - Status: Mir geht es GUT 🟢')
+                } catch (err: any) {
+                  alert(`❌ Fehler: ${err.message}`)
+                }
               }}
             />
           </Grid>
         </Grid>
+
+        {/* Status Buttons - Standort mit Status */}
+        <Box
+          sx={{
+            mt: 6,
+            pt: 4,
+            borderTop: '2px solid rgba(239, 68, 68, 0.2)',
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              mb: 3,
+              fontSize: { xs: '1.1rem', sm: '1.3rem' },
+              fontWeight: 800,
+              color: '#991b1b',
+              textAlign: 'center',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+            }}
+          >
+            📍 Mein Status
+          </Typography>
+
+          <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} sx={{ justifyContent: 'center' }}>
+            <Grid item xs={12} sm={6} md={4}>
+              <Box
+                onClick={async () => {
+                  try {
+                    if (!currentLocation) {
+                      alert('❌ Standort wird noch erfasst, bitte warten...')
+                      return
+                    }
+                    const location = { ...currentLocation, healthStatus: 'GOOD' as const }
+                    await locationService.sendLocationToBackend(location)
+                    alert('✅ Standort übermittelt - Status: Mir geht es GUT 🟢')
+                  } catch (err: any) {
+                    alert(`❌ Fehler: ${err.message}`)
+                  }
+                }}
+                sx={{
+                  p: 3,
+                  backgroundColor: '#22c55e',
+                  color: 'white',
+                  borderRadius: 2,
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  fontWeight: 700,
+                  fontSize: '1.1rem',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    backgroundColor: '#16a34a',
+                    transform: 'scale(1.05)',
+                  },
+                  '&:active': {
+                    transform: 'scale(0.95)',
+                  },
+                }}
+              >
+                🟢 Mir geht es GUT
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <Box
+                onClick={async () => {
+                  try {
+                    if (!currentLocation) {
+                      alert('❌ Standort wird noch erfasst, bitte warten...')
+                      return
+                    }
+                    const location = { ...currentLocation, healthStatus: 'WARNING' as const }
+                    await locationService.sendLocationToBackend(location)
+                    alert('⚠️ Standort übermittelt - Status: ACHTUNG 🟡')
+                  } catch (err: any) {
+                    alert(`❌ Fehler: ${err.message}`)
+                  }
+                }}
+                sx={{
+                  p: 3,
+                  backgroundColor: '#eab308',
+                  color: 'black',
+                  borderRadius: 2,
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  fontWeight: 700,
+                  fontSize: '1.1rem',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    backgroundColor: '#ca8a04',
+                    transform: 'scale(1.05)',
+                  },
+                  '&:active': {
+                    transform: 'scale(0.95)',
+                  },
+                }}
+              >
+                🟡 ACHTUNG
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <Box
+                onClick={async () => {
+                  try {
+                    if (!currentLocation) {
+                      alert('❌ Standort wird noch erfasst, bitte warten...')
+                      return
+                    }
+                    const location = { ...currentLocation, healthStatus: 'EMERGENCY' as const }
+                    await locationService.sendLocationToBackend(location)
+                    alert('🚨 Standort übermittelt - Status: NOT 🔴')
+                  } catch (err: any) {
+                    alert(`❌ Fehler: ${err.message}`)
+                  }
+                }}
+                sx={{
+                  p: 3,
+                  backgroundColor: '#ef4444',
+                  color: 'white',
+                  borderRadius: 2,
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  fontWeight: 700,
+                  fontSize: '1.1rem',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    backgroundColor: '#dc2626',
+                    transform: 'scale(1.05)',
+                  },
+                  '&:active': {
+                    transform: 'scale(0.95)',
+                  },
+                }}
+              >
+                🔴 NOT
+              </Box>
+            </Grid>
+          </Grid>
+        </Box>
       </Box>
 
       {/* Hauptbereich: Tile Grid */}
@@ -244,7 +421,7 @@ export default function Home() {
           </Box>
         ) : (
           <TileGrid
-            tiles={isLoggedIn && tiles.length > 0 ? tiles : DEFAULT_TILES}
+            tiles={isLoggedIn && tiles.length > 0 ? (tiles as any) : (DEFAULT_TILES as any)}
             onSpeak={handleSpeak}
           />
         )}

@@ -23,9 +23,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private JwtTokenProvider tokenProvider;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath();
+        // Skip filter for public endpoints
+        return isPublicEndpoint(path);
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+
         try {
             String token = extractJwtFromRequest(request);
 
@@ -45,6 +53,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isPublicEndpoint(String path) {
+        return path.startsWith("/auth/") ||
+               path.startsWith("/api/auth/") ||
+               path.equals("/health") ||
+               path.equals("/location/people") ||
+               path.startsWith("/location/people/") ||
+               path.equals("/api/location/people") ||
+               path.startsWith("/api/location/people/");
     }
 
     private String extractJwtFromRequest(HttpServletRequest request) {

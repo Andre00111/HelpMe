@@ -10,7 +10,7 @@ interface TileProps {
   onSpeak?: (text: string) => void
 }
 
-export default function Tile({ id, text, color, ariaLabel, onSpeak }: TileProps) {
+export default function Tile({ text, color, ariaLabel, onSpeak }: TileProps) {
   const [isActive, setIsActive] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
