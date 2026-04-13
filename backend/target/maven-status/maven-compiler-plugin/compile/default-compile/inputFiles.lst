@@ -2,12 +2,14 @@
 /Users/andre/Desktop/projekte/HelpMe/backend/src/main/java/com/helpme/config/SecurityConfig.java
 /Users/andre/Desktop/projekte/HelpMe/backend/src/main/java/com/helpme/controller/AuthController.java
 /Users/andre/Desktop/projekte/HelpMe/backend/src/main/java/com/helpme/controller/LocationController.java
+/Users/andre/Desktop/projekte/HelpMe/backend/src/main/java/com/helpme/controller/StatusController.java
 /Users/andre/Desktop/projekte/HelpMe/backend/src/main/java/com/helpme/controller/TileController.java
 /Users/andre/Desktop/projekte/HelpMe/backend/src/main/java/com/helpme/dto/AuthResponse.java
 /Users/andre/Desktop/projekte/HelpMe/backend/src/main/java/com/helpme/dto/LocationDTO.java
 /Users/andre/Desktop/projekte/HelpMe/backend/src/main/java/com/helpme/dto/LoginRequest.java
 /Users/andre/Desktop/projekte/HelpMe/backend/src/main/java/com/helpme/dto/RegisterRequest.java
 /Users/andre/Desktop/projekte/HelpMe/backend/src/main/java/com/helpme/dto/TileDTO.java
+/Users/andre/Desktop/projekte/HelpMe/backend/src/main/java/com/helpme/entity/HealthStatus.java
 /Users/andre/Desktop/projekte/HelpMe/backend/src/main/java/com/helpme/entity/Location.java
 /Users/andre/Desktop/projekte/HelpMe/backend/src/main/java/com/helpme/entity/Tile.java
 /Users/andre/Desktop/projekte/HelpMe/backend/src/main/java/com/helpme/entity/User.java

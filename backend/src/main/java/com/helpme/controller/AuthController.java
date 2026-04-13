@@ -28,11 +28,15 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest request) {
         try {
+            log.info("📥 [AuthController] POST /auth/register - name: {}, email: {}, isHelper: {}",
+                    request.getName(), request.getEmail(), request.getIsHelper());
             User user = userService.registerUser(request);
             String token = jwtTokenProvider.generateToken(user.getId(), user.getEmail());
             AuthResponse response = AuthResponse.from(user, token);
+            log.info("✅ [AuthController] Register successful - userId: {}, email: {}", user.getId(), user.getEmail());
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
+            log.error("❌ [AuthController] Register failed: {}", e.getMessage());
             return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
         }
     }
@@ -40,11 +44,14 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@Valid @RequestBody LoginRequest request) {
         try {
+            log.info("📥 [AuthController] POST /auth/login - email: {}", request.getEmail());
             User user = userService.loginUser(request);
             String token = jwtTokenProvider.generateToken(user.getId(), user.getEmail());
             AuthResponse response = AuthResponse.from(user, token);
+            log.info("✅ [AuthController] Login successful - userId: {}, email: {}", user.getId(), user.getEmail());
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
+            log.error("❌ [AuthController] Login failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse(e.getMessage()));
         }
@@ -53,13 +60,30 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
         try {
+            log.info("📥 [AuthController] GET /auth/me - Token validation");
             String token = authHeader.substring(7);
             Long userId = jwtTokenProvider.getUserIdFromToken(token);
             User user = userService.getUserById(userId);
+            log.info("✅ [AuthController] getCurrentUser successful - userId: {}, email: {}", user.getId(), user.getEmail());
             return ResponseEntity.ok(user);
         } catch (Exception e) {
+            log.error("❌ [AuthController] getCurrentUser failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Authentifizierung erforderlich"));
+        }
+    }
+
+    @GetMapping("/profiles")
+    public ResponseEntity<?> getProfiles() {
+        try {
+            log.info("📥 [AuthController] GET /auth/profiles - Fetching all profiles");
+            var profiles = userService.getAllProfiles();
+            log.info("✅ [AuthController] Profiles loaded - count: {}", profiles.size());
+            return ResponseEntity.ok(profiles);
+        } catch (Exception e) {
+            log.error("❌ [AuthController] Failed to load profiles: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Fehler beim Laden der Profile"));
         }
     }
 

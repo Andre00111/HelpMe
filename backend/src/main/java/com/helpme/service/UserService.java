@@ -3,7 +3,9 @@ package com.helpme.service;
 import com.helpme.dto.LoginRequest;
 import com.helpme.dto.RegisterRequest;
 import com.helpme.entity.User;
+import com.helpme.entity.UserProfile;
 import com.helpme.repository.UserRepository;
+import com.helpme.repository.UserProfileRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -18,6 +21,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserProfileRepository userProfileRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -34,11 +40,19 @@ public class UserService {
             throw new IllegalArgumentException("E-Mail-Adresse wird bereits verwendet");
         }
 
+        // Lade Profil
+        UserProfile profile = null;
+        if (request.getProfileId() != null) {
+            profile = userProfileRepository.findById(request.getProfileId())
+                    .orElseThrow(() -> new IllegalArgumentException("Profil nicht gefunden"));
+        }
+
         User user = User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .isHelper(request.getIsHelper())
+                .profile(profile)
                 .active(true)
                 .build();
 
@@ -93,5 +107,10 @@ public class UserService {
         user.setActive(false);
         userRepository.save(user);
         log.info("User deactivated: {}", user.getEmail());
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserProfile> getAllProfiles() {
+        return userProfileRepository.findAll();
     }
 }

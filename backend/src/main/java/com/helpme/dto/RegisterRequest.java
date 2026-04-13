@@ -28,4 +28,6 @@ public class RegisterRequest {
     private String passwordConfirm;
 
     private Boolean isHelper = false;
+
+    private Long profileId;  // Profil-ID bei Registration
 }

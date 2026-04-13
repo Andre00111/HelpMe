@@ -130,8 +130,11 @@ class LocationService {
   async sendLocationToBackend(location: LocationData): Promise<void> {
     const token = localStorage.getItem('authToken')
     if (!token) {
+      console.error('❌ [LocationService] Keine Authentifizierung gefunden')
       throw new Error('Keine Authentifizierung gefunden')
     }
+
+    console.log('📤 [LocationService] POST /location:', { lat: location.latitude, lng: location.longitude })
 
     try {
       await axios.post(`${API_BASE_URL}/api/location`, location, {
@@ -140,9 +143,9 @@ class LocationService {
           'Content-Type': 'application/json',
         },
       })
-      console.log('Location sent to backend successfully')
+      console.log('✅ [LocationService] Location erfolgreich gesendet')
     } catch (error) {
-      console.error('Error sending location to backend:', error)
+      console.error('❌ [LocationService] Fehler:', error)
       throw error
     }
   }

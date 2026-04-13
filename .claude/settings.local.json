@@ -35,7 +35,11 @@
       "Bash(bash start.sh)",
       "Bash(curl -s http://localhost:8081/api/auth/health)",
       "Bash(curl -s -I http://localhost:3000)",
-      "Bash(curl -s -I http://localhost:3001)"
+      "Bash(curl -s -I http://localhost:3001)",
+      "Bash(curl -X POST http://localhost:8081/api/status -H 'Content-Type: application/json' -H 'Authorization: Bearer invalid-token' -d '{\"healthStatus\":\"WARNING\"}')",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(grep -r \"setInterval.*[0-9]\\\\{3,\\\\}\" /Users/andre/Desktop/projekte/HelpMe/frontend/src --include=\"*.tsx\" --include=\"*.ts\")"
     ]
   }
 }

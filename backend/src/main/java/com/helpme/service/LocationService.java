@@ -1,8 +1,11 @@
 package com.helpme.service;
 
 import com.helpme.dto.LocationDTO;
+import com.helpme.dto.PersonWithStatusDTO;
+import com.helpme.entity.HealthStatus;
 import com.helpme.entity.Location;
 import com.helpme.entity.User;
+import com.helpme.repository.HealthStatusUpdateRepository;
 import com.helpme.repository.LocationRepository;
 import com.helpme.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +27,9 @@ public class LocationService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private HealthStatusUpdateRepository healthStatusUpdateRepository;
+
     /**
      * Save a new location for a user
      */
@@ -31,6 +37,7 @@ public class LocationService {
     public LocationDTO saveLocation(Long userId, LocationDTO locationDTO) {
         User user = getUserOrThrow(userId);
 
+        // Always create a new location entry (don't update existing ones)
         Location location = Location.builder()
                 .user(user)
                 .latitude(locationDTO.getLatitude())
@@ -93,6 +100,43 @@ public class LocationService {
 
         return locations.stream()
                 .map(LocationDTO::from)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get the latest location and status for all users (for cockpit dashboard)
+     */
+    @Transactional(readOnly = true)
+    public List<PersonWithStatusDTO> getAllPeopleWithStatus() {
+        List<Location> locations = locationRepository.findLatestLocationForEachUser();
+
+        return locations.stream()
+                .map(location -> {
+                    // Get latest status for this user, if any
+                    var latestStatus = healthStatusUpdateRepository.findFirstByUserOrderByCreatedAtDesc(location.getUser());
+
+                    PersonWithStatusDTO dto = PersonWithStatusDTO.builder()
+                            .id(location.getId())
+                            .userId(location.getUser().getId())
+                            .userName(location.getUser().getName())
+                            .latitude(location.getLatitude())
+                            .longitude(location.getLongitude())
+                            .accuracy(location.getAccuracy())
+                            .locationTimestamp(location.getCreatedAt())
+                            .build();
+
+                    // Add status if it exists
+                    if (latestStatus.isPresent()) {
+                        var status = latestStatus.get();
+                        dto.setHealthStatus(status.getHealthStatus());
+                        dto.setHealthStatusLabel(status.getHealthStatus().getLabel());
+                        dto.setHealthStatusColor(status.getHealthStatus().getColor());
+                        dto.setStatusTimestamp(status.getCreatedAt());
+                    }
+                    // If no status exists, healthStatus remains null (not set)
+
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 

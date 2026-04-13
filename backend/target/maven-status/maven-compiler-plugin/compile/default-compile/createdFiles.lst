@@ -1,3 +1,4 @@
+com/helpme/controller/StatusController$ErrorResponse.class
 com/helpme/controller/AuthController$ErrorResponse.class
 com/helpme/controller/TileController$SuccessResponse.class
 com/helpme/controller/AuthController.class
@@ -23,12 +24,15 @@ com/helpme/service/TileService.class
 com/helpme/service/UserService.class
 com/helpme/dto/LoginRequest.class
 com/helpme/repository/TileRepository.class
+com/helpme/entity/HealthStatus.class
 com/helpme/controller/LocationController$SuccessResponse.class
 com/helpme/controller/LocationController.class
+com/helpme/controller/StatusController$StatusUpdateRequest.class
 com/helpme/config/SecurityConfig.class
 com/helpme/controller/LocationController$ErrorResponse.class
 com/helpme/dto/LocationDTO.class
 com/helpme/dto/AuthResponse$AuthResponseBuilder.class
+com/helpme/controller/StatusController.class
 com/helpme/dto/TileDTO$TileDTOBuilder.class
 com/helpme/entity/Tile.class
 com/helpme/service/LocationService.class

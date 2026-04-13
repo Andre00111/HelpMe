@@ -29,9 +29,12 @@ public class TileController {
     public ResponseEntity<?> getTiles(@RequestHeader("Authorization") String authHeader) {
         try {
             Long userId = extractUserIdFromToken(authHeader);
+            log.info("📥 [TileController] GET /tiles - userId: {}", userId);
             List<TileDTO> tiles = tileService.getTilesByUser(userId);
+            log.info("✅ [TileController] Tiles retrieved - userId: {}, count: {}", userId, tiles.size());
             return ResponseEntity.ok(tiles);
         } catch (Exception e) {
+            log.error("❌ [TileController] Error retrieving tiles: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Authentifizierung erforderlich"));
         }
@@ -43,12 +46,17 @@ public class TileController {
             @RequestHeader("Authorization") String authHeader) {
         try {
             Long userId = extractUserIdFromToken(authHeader);
+            log.info("📥 [TileController] GET /tiles/category/{} - userId: {}", category, userId);
             List<TileDTO> tiles = tileService.getTilesByCategory(userId, category);
+            log.info("✅ [TileController] Tiles by category retrieved - userId: {}, category: {}, count: {}",
+                    userId, category, tiles.size());
             return ResponseEntity.ok(tiles);
         } catch (IllegalArgumentException e) {
+            log.error("❌ [TileController] Invalid argument for category {}: {}", category, e.getMessage());
             return ResponseEntity.badRequest()
                     .body(new ErrorResponse(e.getMessage()));
         } catch (Exception e) {
+            log.error("❌ [TileController] Error retrieving tiles by category: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Authentifizierung erforderlich"));
         }
@@ -60,12 +68,16 @@ public class TileController {
             @RequestHeader("Authorization") String authHeader) {
         try {
             Long userId = extractUserIdFromToken(authHeader);
+            log.info("📥 [TileController] GET /tiles/{} - userId: {}", id, userId);
             TileDTO tile = tileService.getTile(userId, id);
+            log.info("✅ [TileController] Tile retrieved - userId: {}, tileId: {}", userId, id);
             return ResponseEntity.ok(tile);
         } catch (IllegalArgumentException e) {
+            log.error("❌ [TileController] Tile not found - tileId: {}: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ErrorResponse(e.getMessage()));
         } catch (Exception e) {
+            log.error("❌ [TileController] Error retrieving tile: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Authentifizierung erforderlich"));
         }
@@ -77,12 +89,17 @@ public class TileController {
             @RequestHeader("Authorization") String authHeader) {
         try {
             Long userId = extractUserIdFromToken(authHeader);
+            log.info("📥 [TileController] POST /tiles - userId: {}, title: {}, category: {}",
+                    userId, tileDTO.getTitle(), tileDTO.getCategory());
             TileDTO createdTile = tileService.createTile(userId, tileDTO);
+            log.info("✅ [TileController] Tile created - userId: {}, tileId: {}", userId, createdTile.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(createdTile);
         } catch (IllegalArgumentException e) {
+            log.error("❌ [TileController] Invalid argument: {}", e.getMessage());
             return ResponseEntity.badRequest()
                     .body(new ErrorResponse(e.getMessage()));
         } catch (Exception e) {
+            log.error("❌ [TileController] Error creating tile: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Authentifizierung erforderlich"));
         }
@@ -95,12 +112,16 @@ public class TileController {
             @RequestHeader("Authorization") String authHeader) {
         try {
             Long userId = extractUserIdFromToken(authHeader);
+            log.info("📥 [TileController] PUT /tiles/{} - userId: {}, title: {}", id, userId, tileDTO.getTitle());
             TileDTO updatedTile = tileService.updateTile(userId, id, tileDTO);
+            log.info("✅ [TileController] Tile updated - userId: {}, tileId: {}", userId, id);
             return ResponseEntity.ok(updatedTile);
         } catch (IllegalArgumentException e) {
+            log.error("❌ [TileController] Tile not found - tileId: {}: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ErrorResponse(e.getMessage()));
         } catch (Exception e) {
+            log.error("❌ [TileController] Error updating tile: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Authentifizierung erforderlich"));
         }
@@ -112,12 +133,16 @@ public class TileController {
             @RequestHeader("Authorization") String authHeader) {
         try {
             Long userId = extractUserIdFromToken(authHeader);
+            log.info("📥 [TileController] DELETE /tiles/{} - userId: {}", id, userId);
             tileService.deleteTile(userId, id);
+            log.info("✅ [TileController] Tile deleted - userId: {}, tileId: {}", userId, id);
             return ResponseEntity.ok(new SuccessResponse("Kachel gelöscht"));
         } catch (IllegalArgumentException e) {
+            log.error("❌ [TileController] Tile not found - tileId: {}: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ErrorResponse(e.getMessage()));
         } catch (Exception e) {
+            log.error("❌ [TileController] Error deleting tile: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Authentifizierung erforderlich"));
         }
@@ -130,9 +155,12 @@ public class TileController {
         try {
             Long userId = extractUserIdFromToken(authHeader);
             List<Long> tileIds = payload.get("tileIds");
+            log.info("📥 [TileController] POST /tiles/reorder - userId: {}, count: {}", userId, tileIds.size());
             tileService.reorderTiles(userId, tileIds);
+            log.info("✅ [TileController] Tiles reordered - userId: {}, count: {}", userId, tileIds.size());
             return ResponseEntity.ok(new SuccessResponse("Kacheln neu angeordnet"));
         } catch (Exception e) {
+            log.error("❌ [TileController] Error reordering tiles: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Authentifizierung erforderlich"));
         }

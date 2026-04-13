@@ -47,6 +47,10 @@ public class User {
     @Column(name = "helper_of_id")
     private Long helperOfId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "profile_id")
+    private UserProfile profile;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<Tile> tiles = new HashSet<>();

@@ -34,13 +34,17 @@ public class LocationController {
             @RequestHeader("Authorization") String authHeader) {
         try {
             Long userId = extractUserIdFromToken(authHeader);
+            log.info("📥 [LocationController] POST /api/location - userId: {}, lat: {}, lng: {}, accuracy: {}",
+                    userId, locationDTO.getLatitude(), locationDTO.getLongitude(), locationDTO.getAccuracy());
             LocationDTO savedLocation = locationService.saveLocation(userId, locationDTO);
+            log.info("✅ [LocationController] Location saved - userId: {}, id: {}", userId, savedLocation.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(savedLocation);
         } catch (IllegalArgumentException e) {
+            log.error("❌ [LocationController] Invalid argument: {}", e.getMessage());
             return ResponseEntity.badRequest()
                     .body(new ErrorResponse(e.getMessage()));
         } catch (Exception e) {
-            log.error("Error saving location", e);
+            log.error("❌ [LocationController] Error saving location: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Authentifizierung erforderlich"));
         }
@@ -55,12 +59,17 @@ public class LocationController {
             @RequestHeader("Authorization") String authHeader) {
         try {
             Long userId = extractUserIdFromToken(authHeader);
+            log.info("📥 [LocationController] GET /api/location/latest - userId: {}", userId);
             LocationDTO location = locationService.getLatestLocation(userId);
+            log.info("✅ [LocationController] Latest location retrieved - userId: {}, lat: {}, lng: {}",
+                    userId, location.getLatitude(), location.getLongitude());
             return ResponseEntity.ok(location);
         } catch (IllegalArgumentException e) {
+            log.error("❌ [LocationController] Location not found: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ErrorResponse(e.getMessage()));
         } catch (Exception e) {
+            log.error("❌ [LocationController] Error retrieving latest location: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Authentifizierung erforderlich"));
         }
@@ -75,9 +84,12 @@ public class LocationController {
             @RequestHeader("Authorization") String authHeader) {
         try {
             Long userId = extractUserIdFromToken(authHeader);
+            log.info("📥 [LocationController] GET /api/location/history - userId: {}", userId);
             List<LocationDTO> locations = locationService.getLocationHistory(userId);
+            log.info("✅ [LocationController] Location history retrieved - userId: {}, count: {}", userId, locations.size());
             return ResponseEntity.ok(locations);
         } catch (Exception e) {
+            log.error("❌ [LocationController] Error retrieving location history: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ErrorResponse("Authentifizierung erforderlich"));
         }
@@ -87,13 +99,18 @@ public class LocationController {
      * Get all latest locations for all users (for dashboard/cockpit)
      * GET /api/location/people
      * NOTE: Currently public for testing. Should require Cockpit admin auth in production.
+     * Returns locations ONLY, without health status
+     * Status is sent separately via /api/status endpoint
      */
     @GetMapping("/people")
     public ResponseEntity<?> getAllLatestLocations() {
         try {
-            List<LocationDTO> locations = locationService.getAllLatestLocations();
+            log.info("📥 [LocationController] GET /api/location/people - Fetching all people with locations");
+            var locations = locationService.getAllLatestLocations();
+            log.info("✅ [LocationController] All people locations retrieved - count: {}", locations.size());
             return ResponseEntity.ok(locations);
         } catch (Exception e) {
+            log.error("❌ [LocationController] Error retrieving all people locations: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ErrorResponse("Fehler beim Abrufen der Standorte"));
         }
@@ -108,12 +125,17 @@ public class LocationController {
     public ResponseEntity<?> getUserLatestLocation(
             @PathVariable Long userId) {
         try {
+            log.info("📥 [LocationController] GET /api/location/people/{} - Fetching location for user", userId);
             LocationDTO location = locationService.getLatestLocation(userId);
+            log.info("✅ [LocationController] User location retrieved - userId: {}, lat: {}, lng: {}",
+                    userId, location.getLatitude(), location.getLongitude());
             return ResponseEntity.ok(location);
         } catch (IllegalArgumentException e) {
+            log.error("❌ [LocationController] Location not found for userId {}: {}", userId, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ErrorResponse(e.getMessage()));
         } catch (Exception e) {
+            log.error("❌ [LocationController] Error retrieving user location: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ErrorResponse("Fehler beim Abrufen des Standorts"));
         }

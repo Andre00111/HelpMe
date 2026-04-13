@@ -6,6 +6,7 @@ import { DEFAULT_TILES } from '../data/tiles'
 import authService from '../services/authService'
 import tileService, { TileDTO } from '../services/tileService'
 import locationService from '../services/locationService'
+import statusService from '../services/statusService'
 
 export default function Home() {
   const isLoggedIn = authService.isAuthenticated()
@@ -230,9 +231,11 @@ export default function Home() {
                     alert('❌ Standort wird noch erfasst, bitte warten...')
                     return
                   }
-                  const location = { ...currentLocation, healthStatus: 'GOOD' as const }
-                  await locationService.sendLocationToBackend(location)
-                  alert('✅ Standort übermittelt - Status: Mir geht es GUT 🟢')
+                  await Promise.all([
+                    locationService.sendLocationToBackend(currentLocation),
+                    statusService.sendStatus('GOOD')
+                  ])
+                  alert('✅ Standort und Status übermittelt - Mir geht es GUT 🟢')
                 } catch (err: any) {
                   alert(`❌ Fehler: ${err.message}`)
                 }
@@ -273,9 +276,11 @@ export default function Home() {
                       alert('❌ Standort wird noch erfasst, bitte warten...')
                       return
                     }
-                    const location = { ...currentLocation, healthStatus: 'GOOD' as const }
-                    await locationService.sendLocationToBackend(location)
-                    alert('✅ Standort übermittelt - Status: Mir geht es GUT 🟢')
+                    await Promise.all([
+                      locationService.sendLocationToBackend(currentLocation),
+                      statusService.sendStatus('GOOD')
+                    ])
+                    alert('✅ Standort und Status übermittelt - Mir geht es GUT 🟢')
                   } catch (err: any) {
                     alert(`❌ Fehler: ${err.message}`)
                   }
@@ -311,9 +316,11 @@ export default function Home() {
                       alert('❌ Standort wird noch erfasst, bitte warten...')
                       return
                     }
-                    const location = { ...currentLocation, healthStatus: 'WARNING' as const }
-                    await locationService.sendLocationToBackend(location)
-                    alert('⚠️ Standort übermittelt - Status: ACHTUNG 🟡')
+                    await Promise.all([
+                      locationService.sendLocationToBackend(currentLocation),
+                      statusService.sendStatus('WARNING')
+                    ])
+                    alert('⚠️ Standort und Status übermittelt - ACHTUNG 🟡')
                   } catch (err: any) {
                     alert(`❌ Fehler: ${err.message}`)
                   }
@@ -349,9 +356,11 @@ export default function Home() {
                       alert('❌ Standort wird noch erfasst, bitte warten...')
                       return
                     }
-                    const location = { ...currentLocation, healthStatus: 'EMERGENCY' as const }
-                    await locationService.sendLocationToBackend(location)
-                    alert('🚨 Standort übermittelt - Status: NOT 🔴')
+                    await Promise.all([
+                      locationService.sendLocationToBackend(currentLocation),
+                      statusService.sendStatus('EMERGENCY')
+                    ])
+                    alert('🚨 Standort und Status übermittelt - NOT 🔴')
                   } catch (err: any) {
                     alert(`❌ Fehler: ${err.message}`)
                   }
