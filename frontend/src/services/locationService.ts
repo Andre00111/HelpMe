@@ -6,7 +6,6 @@ interface LocationData {
   latitude: number
   longitude: number
   accuracy: number
-  healthStatus?: 'GOOD' | 'WARNING' | 'EMERGENCY'
 }
 
 /**

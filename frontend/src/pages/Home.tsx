@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Container, Typography, Box, Alert, AlertTitle, Grid, CircularProgress } from '@mui/material'
+import { Container, Typography, Box, Alert, AlertTitle, Grid, CircularProgress, Button } from '@mui/material'
 import TileGrid from '../components/TileGrid'
 import EmergencyTile from '../components/EmergencyTile'
 import { DEFAULT_TILES } from '../data/tiles'
@@ -8,6 +8,63 @@ import tileService, { TileDTO } from '../services/tileService'
 import locationService from '../services/locationService'
 import statusService from '../services/statusService'
 
+type StatusType = 'GOOD' | 'WARNING' | 'EMERGENCY'
+
+interface LocationData {
+  latitude: number
+  longitude: number
+  accuracy: number
+}
+
+interface StatusButtonProps {
+  status: StatusType
+  emoji: string
+  label: string
+  color: string
+  hoverColor: string
+  onSendStatus: (status: StatusType) => Promise<void>
+}
+
+function StatusButton({ status, emoji, label, color, hoverColor, onSendStatus }: StatusButtonProps) {
+  const [loading, setLoading] = useState(false)
+
+  const handleClick = async () => {
+    setLoading(true)
+    try {
+      await onSendStatus(status)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Button
+      fullWidth
+      onClick={handleClick}
+      disabled={loading}
+      sx={{
+        p: 3,
+        backgroundColor: color,
+        color: status === 'WARNING' ? 'black' : 'white',
+        borderRadius: 2,
+        textAlign: 'center',
+        fontWeight: 700,
+        fontSize: '1.1rem',
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          backgroundColor: hoverColor,
+          transform: 'scale(1.05)',
+        },
+        '&:active': {
+          transform: 'scale(0.95)',
+        },
+      }}
+    >
+      {emoji} {label}
+    </Button>
+  )
+}
+
 export default function Home() {
   const isLoggedIn = authService.isAuthenticated()
   const [isSpeechSupported, setIsSpeechSupported] = useState(true)
@@ -15,7 +72,7 @@ export default function Home() {
   const [tiles, setTiles] = useState<TileDTO[]>([])
   const [tilesLoading, setTilesLoading] = useState(false)
   const [tilesError, setTilesError] = useState<string | null>(null)
-  const [currentLocation, setCurrentLocation] = useState<any>(null)
+  const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null)
 
   // Prüfe ob Web Speech API verfügbar ist
   useEffect(() => {
@@ -49,56 +106,65 @@ export default function Home() {
     }
   }, [isLoggedIn])
 
-  // Start location tracking when logged in (store current location, don't send it)
+  // Start location tracking when logged in
   useEffect(() => {
-    if (isLoggedIn) {
-      console.log('Starting location tracking')
-      locationService.startTracking(
-        (location) => {
-          console.log('Location tracked:', location)
-          setCurrentLocation(location)
-        },
-        (error) => {
-          console.error('Location error:', error)
-        }
-      )
-    } else {
+    if (!isLoggedIn) {
       locationService.stopTracking()
+      return
     }
 
-    // Cleanup: stop tracking when component unmounts or user logs out
-    return () => {
-      if (!isLoggedIn) {
-        locationService.stopTracking()
+    console.log('Starting location tracking')
+    locationService.startTracking(
+      (location) => {
+        console.log('Location tracked:', location)
+        setCurrentLocation(location)
+      },
+      (error) => {
+        console.error('Location error:', error)
       }
+    )
+
+    return () => {
+      locationService.stopTracking()
     }
   }, [isLoggedIn])
 
   const handleSpeak = (text: string) => {
-    if (!isSpeechSupported) {
-      return
-    }
+    if (!isSpeechSupported) return
 
-    // Stoppe aktuelle Sprachausgabe
     window.speechSynthesis.cancel()
-
     setIsSpeaking(true)
 
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.lang = 'de-DE'
     utterance.rate = 0.95
-    utterance.pitch = 1
-    utterance.volume = 1
 
-    utterance.onend = () => {
-      setIsSpeaking(false)
-    }
-
-    utterance.onerror = () => {
-      setIsSpeaking(false)
-    }
+    const handleEnd = () => setIsSpeaking(false)
+    utterance.onend = handleEnd
+    utterance.onerror = handleEnd
 
     window.speechSynthesis.speak(utterance)
+  }
+
+  const sendLocationAndStatus = async (status: StatusType) => {
+    if (!currentLocation) {
+      alert('❌ Standort wird noch erfasst, bitte warten...')
+      return
+    }
+
+    try {
+      await locationService.sendLocationToBackend(currentLocation)
+      await statusService.sendStatus(status)
+
+      const messages = {
+        GOOD: '✅ Standort und Status übermittelt - Mir geht es GUT 🟢',
+        WARNING: '⚠️ Standort und Status übermittelt - ACHTUNG 🟡',
+        EMERGENCY: '🚨 Standort und Status übermittelt - NOT 🔴',
+      }
+      alert(messages[status])
+    } catch (err: any) {
+      alert(`❌ Fehler: ${err.message}`)
+    }
   }
 
   return (
@@ -231,11 +297,8 @@ export default function Home() {
                     alert('❌ Standort wird noch erfasst, bitte warten...')
                     return
                   }
-                  await Promise.all([
-                    locationService.sendLocationToBackend(currentLocation),
-                    statusService.sendStatus('GOOD')
-                  ])
-                  alert('✅ Standort und Status übermittelt - Mir geht es GUT 🟢')
+                  await locationService.sendLocationToBackend(currentLocation)
+                  alert('✅ Standort')
                 } catch (err: any) {
                   alert(`❌ Fehler: ${err.message}`)
                 }
@@ -244,7 +307,7 @@ export default function Home() {
           </Grid>
         </Grid>
 
-        {/* Status Buttons - Standort mit Status */}
+        {/* Status Buttons */}
         <Box
           sx={{
             mt: 6,
@@ -269,134 +332,41 @@ export default function Home() {
 
           <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} sx={{ justifyContent: 'center' }}>
             <Grid item xs={12} sm={6} md={4}>
-              <Box
-                onClick={async () => {
-                  try {
-                    if (!currentLocation) {
-                      alert('❌ Standort wird noch erfasst, bitte warten...')
-                      return
-                    }
-                    await Promise.all([
-                      locationService.sendLocationToBackend(currentLocation),
-                      statusService.sendStatus('GOOD')
-                    ])
-                    alert('✅ Standort und Status übermittelt - Mir geht es GUT 🟢')
-                  } catch (err: any) {
-                    alert(`❌ Fehler: ${err.message}`)
-                  }
-                }}
-                sx={{
-                  p: 3,
-                  backgroundColor: '#22c55e',
-                  color: 'white',
-                  borderRadius: 2,
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  fontWeight: 700,
-                  fontSize: '1.1rem',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    backgroundColor: '#16a34a',
-                    transform: 'scale(1.05)',
-                  },
-                  '&:active': {
-                    transform: 'scale(0.95)',
-                  },
-                }}
-              >
-                🟢 Mir geht es GUT
-              </Box>
+              <StatusButton
+                status="GOOD"
+                emoji="🟢"
+                label="Mir geht es GUT"
+                color="#22c55e"
+                hoverColor="#16a34a"
+                onSendStatus={sendLocationAndStatus}
+              />
             </Grid>
-
             <Grid item xs={12} sm={6} md={4}>
-              <Box
-                onClick={async () => {
-                  try {
-                    if (!currentLocation) {
-                      alert('❌ Standort wird noch erfasst, bitte warten...')
-                      return
-                    }
-                    await Promise.all([
-                      locationService.sendLocationToBackend(currentLocation),
-                      statusService.sendStatus('WARNING')
-                    ])
-                    alert('⚠️ Standort und Status übermittelt - ACHTUNG 🟡')
-                  } catch (err: any) {
-                    alert(`❌ Fehler: ${err.message}`)
-                  }
-                }}
-                sx={{
-                  p: 3,
-                  backgroundColor: '#eab308',
-                  color: 'black',
-                  borderRadius: 2,
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  fontWeight: 700,
-                  fontSize: '1.1rem',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    backgroundColor: '#ca8a04',
-                    transform: 'scale(1.05)',
-                  },
-                  '&:active': {
-                    transform: 'scale(0.95)',
-                  },
-                }}
-              >
-                🟡 ACHTUNG
-              </Box>
+              <StatusButton
+                status="WARNING"
+                emoji="🟡"
+                label="ACHTUNG"
+                color="#eab308"
+                hoverColor="#ca8a04"
+                onSendStatus={sendLocationAndStatus}
+              />
             </Grid>
-
             <Grid item xs={12} sm={6} md={4}>
-              <Box
-                onClick={async () => {
-                  try {
-                    if (!currentLocation) {
-                      alert('❌ Standort wird noch erfasst, bitte warten...')
-                      return
-                    }
-                    await Promise.all([
-                      locationService.sendLocationToBackend(currentLocation),
-                      statusService.sendStatus('EMERGENCY')
-                    ])
-                    alert('🚨 Standort und Status übermittelt - NOT 🔴')
-                  } catch (err: any) {
-                    alert(`❌ Fehler: ${err.message}`)
-                  }
-                }}
-                sx={{
-                  p: 3,
-                  backgroundColor: '#ef4444',
-                  color: 'white',
-                  borderRadius: 2,
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  fontWeight: 700,
-                  fontSize: '1.1rem',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    backgroundColor: '#dc2626',
-                    transform: 'scale(1.05)',
-                  },
-                  '&:active': {
-                    transform: 'scale(0.95)',
-                  },
-                }}
-              >
-                🔴 NOT
-              </Box>
+              <StatusButton
+                status="EMERGENCY"
+                emoji="🔴"
+                label="NOT"
+                color="#ef4444"
+                hoverColor="#dc2626"
+                onSendStatus={sendLocationAndStatus}
+              />
             </Grid>
           </Grid>
         </Box>
       </Box>
 
-      {/* Hauptbereich: Tile Grid */}
-      <Box
-        sx={{
-          mb: 4,
-        }}
-      >
+      {/* Tile Grid Section */}
+      <Box sx={{ mb: 4 }}>
         <Typography
           variant="h6"
           sx={{
@@ -414,11 +384,7 @@ export default function Home() {
           <Alert
             severity="error"
             onClose={() => setTilesError(null)}
-            sx={{
-              mb: 3,
-              fontSize: '1.05rem',
-              borderRadius: 2,
-            }}
+            sx={{ mb: 3, fontSize: '1.05rem', borderRadius: 2 }}
           >
             {tilesError}
           </Alert>
@@ -430,7 +396,7 @@ export default function Home() {
           </Box>
         ) : (
           <TileGrid
-            tiles={isLoggedIn && tiles.length > 0 ? (tiles as any) : (DEFAULT_TILES as any)}
+            tiles={isLoggedIn && tiles.length > 0 ? (tiles as any) : DEFAULT_TILES}
             onSpeak={handleSpeak}
           />
         )}
